@@ -58,7 +58,6 @@ function setup() {
     connectBtn = createButton('Connect to micro:bit');
     connectBtn.position(width/3,300);
     connectBtn.mousePressed(connectBtnClick);
-    fill('red');
     ellipse(x, height / 2, 100, 100);
     
 }
@@ -74,9 +73,9 @@ function draw() {
         else if(dataRx == 'B'){
           x-=10;
         }
-        background(0);
+        background('black');
         ellipse(x, height / 2, 100, 100);
-        fill('rgb(0,16,255)')
+        fill('red')
 
     }
 
@@ -117,7 +116,7 @@ Primero se inicializa el micro:bit importando todas las funciones necesarias par
 ```
 from microbit import *
 ```
-Luego se inicializa la comunicación serial, definiendo una velocidad de transmisión de 115200 baudios. luego los botones A y B funcionaran con un evento, por eso usare el was_pressed con un sleep de 500 para que no se envien muchos datos.
+Luego se inicializa la comunicación serial, definiendo una velocidad de transmisión de 115200 baudios. Los botones A y B funcionaran con un evento, por eso usare el was_pressed con un sleep de 500 para que no se envien muchos datos.
 
 ```
 uart.init(baudrate=115200)
@@ -132,20 +131,27 @@ while True:
 
 En p5.js, primero se declaran las variables principales:
 ```
-let port;
+let port; (Puerto)
 let connectBtn; (botón que permite conectar y desconectar el puerto serial.)
-let x; (almacena la posición horizontal del círculo)
+let x; (usaremos X para almacenar la posición horizontal del círculo)
 ```
-Luego en el setup se define la posición inicial del círculo en el centro del eje horizontal y lo dibujamos usando la vairable x
+Luego en el setup se define la posición inicial de la variable X y creamos un ellipse donde su posición en su eje horizontal sera la variable X y en el vertical lo pondremos en el centro del Canva.
 ```
-x = width / 2;
-ellipse(x, height / 2, 100, 100);
+createCanvas(400, 400); (Creamos un canva)
+  
+    x = width / 2; (Posición inicial de la variable X)
+    background(0); (Color del fondo)
+    port = createSerial();
+    connectBtn = createButton('Connect to micro:bit'); (Creamos un boton)
+    connectBtn.position(width/3,300); (Damos posición al boton)
+    connectBtn.mousePressed(connectBtnClick); (Cuando se presiones, aparecera que el boton se conecto)
+    ellipse(x, height / 2, 100, 100); (Posición del ellipse usando en su eje horizontal la variable X)
 ```
-Continuamos diciendole que por el puerto entre un solo dato
+Creamos la variable dataRx que es igual al valor permitido que entrara por el puerto. (A ó B) 
 ```
 let dataRx = port.read(1);
 ```
-Luego continuamos escribiendo esta linea de código que indica que si se presiona el bonton A este, se movera en la posición horizontal 10 pixeles hacia la derecha y si es B se movera hacia la izquierda.
+Escribiremos esta linea de código que indica que si se presiona el bonton A este, se movera en la posición horizontal (Variable X) 10 pixeles hacia la derecha y si es B se movera hacia la izquierda la misma cantidad de pixeles.
 ```
 if (dataRx == 'A') {
     x += 10;
@@ -153,9 +159,140 @@ if (dataRx == 'A') {
     x -= 10;
 }
 ```
+Le daremos un color al fondo y un color a la ellipse. Es importante ponerle un fondo ya que si no lo hacemos esto generara o dejara por decirlo así como una marca de agua. 
+
+```
+background('black');
+ellipse(x, height / 2, 100, 100);
+fill('red')
+```
+Acá utilizamos el lenguaje de programación html con el fín de mejorar la experiencia visualmente indicando que cuando el puerto este abierto lo conectemos y cuando este se conecte nos aparezca desconectarlo.
+```
+}
+if (!port.opened()) {
+        connectBtn.html('Connect to micro:bit');
+}
+else {
+connectBtn.html('Disconnect');
+}
+}
+```
+
+
 
 #### NOTA:
-Es importante mantener el mismo nivel de baudios en ambos programas para que la comunicación funcione.
+#### 1. Es importante mantener el mismo nivel de baudios en ambos programas para que la comunicación funcione.
+#### 2. Incluir en el Index.html de p5.js. la siguiente librería:
+```
+<script src="https://unpkg.com/@gohai/p5.webserial@^1/libraries/p5.webserial.js"></script>
+```
+
+
+### Actividad_06
+Vas a repasar lo aprendido en esta unidad. Regresa a la actividad 4 y trata de explicar en tus propias palabras de la manera más detallada que puedas cómo funciona el sistema físico interactivo. Analiza cada parte del código y su función dentro del sistema. Si aún tienes dudas sobre alguna parte, aprovecha para aclararlas.
+
+
+Se inicializa el micro:bit importando todas las funciones necesarias para su funcionamiento
+```
+from microbit import *
+```
+
+Creamos un bucle con la función de was_pressed, esta función nos ayudara a definir como funcionara nuestro sistema interactivo. La idea es crear un bucle para que está se repita cada vez que lo presionemos
+
+```
+while True:
+      if button_a.was_pressed():
+```
+
+La idea es utilizar los baudios 115200 antes de enviar el mensaje para inicializar la comunicación serial, este tambien debe ser el mismo en el programa de p5.js y siguiendo este orden de idea enviaremos el mensaje A (uart.write('A'))
+```
+  from microbit import *
+
+  uart.init(baudrate=115200)
+
+  while True:
+      if button_a.was_pressed():
+          uart.write('A')
+```
+
+En el programa de p5.js. es importante incluir la librería:
+```
+<script src="https://unpkg.com/@gohai/p5.webserial@^1/libraries/p5.webserial.js"></script>
+```
+
+#### Entonces...
+En el programa de p5.js. definos las variables del puerto, el boton para conectar el puerto y una condición inicial la cual sera false...
+Pasamos al setup y creamos el canva, le damos un fondo y le decimos que cree un puerto y un boton con un mensaje indicando que conecte el boton, a este boton que es el de la variable boton le damos una posición y una acción... que cuando se de clic sobre este se conecte.
+
+```
+ let port;
+  let connectBtn;
+  let connectionInitialized = false;
+
+  function setup() {
+    createCanvas(400, 400);
+    background(220);
+    port = createSerial();
+    connectBtn = createButton("Connect to micro:bit");
+    connectBtn.position(80, 300);
+    connectBtn.mousePressed(connectBtnClick);
+  }
+  ```
+
+  En la función de draw, volvemos a pintar el canva y luego por buena practica del código limpiamos el frame por eso en la variable
+  let connectionInitialized = false; para que cuando abra el puerto y la conexión incial sea falsa este limpie el puerto y luego inicie el la conexión.
+
+```
+function draw() {
+background(220);
+
+if (port.opened() && !connectionInitialized) {
+port.clear();
+connectionInitialized = true;
+    }
+```
+
+A continuación empezaremos con la animación del recuadro, diciendole cuantos datos el tiene disponible para leer y que solo lea un dato, si el dato que llega es A el recuadro se pintara de rojo pero si el dato que llega es N el recuadro se pintara verde.
+
+```
+    if (port.availableBytes() > 0) {
+      let dataRx = port.read(1);
+      if (dataRx == "A") {
+        fill("red");
+      } else if (dataRx == "N") {
+        fill("green");
+      }
+    }
+```
+Luego centraremos el recuadro y desde html le daremos estetica y texto al boton para conectar y desconectar, si el puerto esta abierto aparece que se puede conectar y cuando se conecte aparecera desconectar en el boton que creamos.
+
+```
+}
+
+    rectMode(CENTER);
+    rect(width / 2, height / 2, 50, 50);
+
+    if (!port.opened()) {
+      connectBtn.html("Connect to micro:bit");
+    } else {
+      connectBtn.html("Disconnect");
+    }
+  }
+
+```
+
+
+Aca le damos la función al boton que si está abierto se comunique por 115200 baudios y use el lenguaje MicroPython y la conexión, es un proceso de logica
+```
+ function connectBtnClick() {
+    if (!port.opened()) {
+      port.open("MicroPython", 115200);
+      connectionInitialized = false;
+    } else {
+      port.close();
+    }
+  }
+```
 
 
 
@@ -165,6 +302,7 @@ Es importante mantener el mismo nivel de baudios en ambos programas para que la 
 
 
 ## Bitácora de reflexión
+
 
 
 
