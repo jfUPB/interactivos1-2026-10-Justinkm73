@@ -171,7 +171,7 @@ def __init__(self,_x,_y,_interval): # Es el constructor de la clase pixel, aquí
 
 ### ACTIVIDAD_02
 
-#### 1.Vas a realizar una modificación. Cuando el semáforo esté en verde, si se presiona el botón A, el semáforo debe cambiar inmediatamente a amarillo (sin esperar a que termine el tiempo de verde). El evento que se debe postear es “A” (post_event(“A”)).
+#### 1. Vas a realizar una modificación. Cuando el semáforo esté en verde, si se presiona el botón A, el semáforo debe cambiar inmediatamente a amarillo (sin esperar a que termine el tiempo de verde). El evento que se debe postear es “A” (post_event(“A”)).
 
 #### CÓDIGO A MODIFICAR:
 ```
@@ -285,7 +285,7 @@ while True:
     utime.sleep_ms(20)
 ```
 
-### Solución 1
+#### Solución Punto #1
 
 La maquina sabe que hacer si recibe A,
 
@@ -359,7 +359,8 @@ Cuando entra, debe dejar el sistema exactamente como ese estado lo define. No de
 
 #### 2. Construye la máquina de estados que modela el problema usando PlantUML. Puedes encontrar el editor aquí y la documentación básica con ejemplos aquí.
 
-### DIAGRAMA:
+#### Solución Punto #2
+#### DIAGRAMA:
 
 @startuml
 title Semáforo - UML State Machine
@@ -386,4 +387,5 @@ WaitInYellow --> WaitInRed : Timeout
 
 
 ## Bitácora de reflexión
+
 
