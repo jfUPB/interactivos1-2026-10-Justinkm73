@@ -1,5 +1,5 @@
 # Unidad 4
-
+---
 ## Bitácora de proceso de aprendizaje
 ### DESARROLLO ACTIVIDAD #1
 ### SOLUCIÓN:
@@ -49,7 +49,7 @@ Si en cambio ves símbolos raros, caracteres extraños o números sin sentido �
 
 https://www.asciitable.com/ (Acá esta la tabla ASCII) para saber que información se está enviando
 
-
+---
 
 ## Bitácora de aplicación 
 ### DESARROLLO ACTIVIDAD #2
@@ -85,6 +85,8 @@ https://www.asciitable.com/ (Acá esta la tabla ASCII) para saber que informaci�
 - fsm.js
 - index.html
 - style.css
+
+---
 
 Antes de cambiar los códigos del proyecto, en https://python.microbit.org/v/3 cambiamos nuestro código en nuestro **microbit** para que lea la integración de CHK y la nueva forma de parsearlo ya que está microbit funcionara como prototipo de nuestra aplicación.
 
@@ -140,6 +142,8 @@ El adapter recibe la trama y la lee — no la transforma. Es como un traductor q
 - El $ entra, nadie lo usa, nadie lo reenvía — muere en el adapter
 
 #### Códigos a corregir (bridgeServer.js - MicrobitV2Adapter.js - sketch.js):
+
+---
 
 ```
 //bridgeServer.js
@@ -380,6 +384,9 @@ main().catch((e) => {
 });
 
 ```
+
+---
+
 
 ```
 
@@ -788,5 +795,206 @@ function windowResized() {
 }
 ```
 
+**NOTAS:**
+
+1. De mouseIsPressed a mb.btnA
+El prototipo usaba el clic del mouse para activar el dibujo. En el sistema con micro:bit no hay mouse, entonces el botón A físico toma ese rol.
+
+2. De mouseY a map(data.y, -2048, 2047, 2, 10)
+El prototipo usaba la posición del mouse en pantalla (0 a 720px) para calcular circleResolution. El acelerómetro no habla en píxeles, habla en unidades de -2048 a 2047, entonces map() traduce ese rango al mismo rango que usaba el mouse.
+
+3. De mouseX a map(data.x, -2048, 2047, -width/2, width/2)
+Igual que el anterior — el radio antes dependía de cuánto movías el mouse horizontalmente. Ahora depende de cuánto inclinas el micro:bit.
+
+4. De keyIsPressed a mb.btnB
+El relleno azul antes se activaba con cualquier tecla del teclado. Ahora lo activa el botón B físico del micro:bit.
+
+5. La separación updateLogic / drawRunning
+Este es el cambio estructural más importante:
+- updateLogic → recibe los datos crudos del hardware y los escala. Es el único lugar donde se hace matemática.
+- drawRunning → solo dibuja usando los valores ya calculados. No sabe nada del hardware.
+
+6. Cambios:
+- mouseIsPressed  →  mb.btnA      (activa el dibujo)
+- mouseY          →  mb.circleResolution  (cuántos lados tiene el polígono)
+- mouseX          →  mb.radius    (qué tan grande es)
+- keyIsPressed    →  mb.btnB      (activa el relleno)
+
+---
+
+**LEVANTAR SERVIDOR Y PONER A FUNCIONAR APLICACIÓN:**
+
+**1. Corregimos nuestros archivos:**
+
+-** bridgeServer.js (Servidor de nuestro proyecto)
+**-** MicrobitV2Adapter.js (Nuevo adapter de nuestro proyecto)
+**-** sketch.js (Adaptar a la aplicación de arte generativo que nos entrega el equipo de diseño)
+**-** Código de nuestro microbit: funciona como prototipo (Cambiar  funciones de diseño para nuestro elemento que funcionara como prototipo)
+
+**2. Terminal:**
+
+- Vamos a la ubicación de nuestra carpeta, le damos clic derecho y abrimos la terminal desde ahi… levantamos el servidor y le decimos que el adapter que implementaremos sera el bin (desde nuestro archivo lo llamamos microbit-bin - y el —device se pone para hacer referencia al adapter que instanciaremos.)
+
+**Escribir en la terminal para hacer lo anterior mencionado**
+
+```jsx
+node bridgeServer.js --device microbit-bin --baud 115200
+```
+
+**3. Visual studio code:**
+
+- Vamos a visual studio code y abrimos el folder de nuestra aplicación, para que este corra y nos de la dirección IP - Necesitaremos un server, osea saber de donde nos llega información, este servidor vendra de una extensión que instalamos directamente en visual studio code, llamada p5.scode que trae el live Server y al instalar el p5.scode, automaticamente se instala la extensión solicitada. Live Server.
+ 
+**a.** p5.vscode ——> Liver Server
+
+**4. Conectar y probar:**
+
+-** Le das clic a Go live, en la parte inferior derecha de la interfaz de visual studio code, asi mismo este te abrira una web con una IP especifica donde te aparecera un bonton que indica conectar los sistemas y protocolos de comunicación para que al mover la microbit esta información se vea reflejada en la pantalla…
+
+**5. Como funciona?**
+Levantamos un servidor Node.js que actúa como puente de comunicación entre un dispositivo físico (micro:bit) y una aplicación web de arte generativo. Para manejar diferentes protocolos de hardware sin modificar el servidor principal, aplicamos el patrón **Adapter** — creando archivos como `MicrobitV2Adapter.js` que se encargan de tres cosas: traducir el protocolo de comunicación del hardware, verificar la integridad de cada trama mediante el cálculo del checksum (descartando silenciosamente las tramas corruptas y avisando en consola), y emitir siempre el mismo objeto estandarizado `{ x, y, btnA, btnB }` sin importar de qué hardware venga.
+
+Esta información viaja a través de dos conexiones:
+
+- **Puerto serial USB** → entre el micro:bit y Node.js
+- **Puerto WebSocket 8081** → entre Node.js y el navegador
+
+En el frontend, una **Máquina de Estados Finitos (FSM)** separa la ingesta de datos del renderizado visual, permitiendo que la aplicación reaccione de forma ordenada a los eventos de conexión, desconexión y llegada de datos del hardware.
+
+Las técnicas aplicadas fueron:
+
+- **Patrón Adapter** — como sistema de traducción y validación entre protocolos
+- **WebSocket** — como medio de transporte de datos entre capas
+- **FSM** — como controlador de la lógica de estados del frontend
+- **Instancias entre archivos** — para conectar las capas del sistema de forma desacoplada
+
+---
+
+**NOTAS:**
+De la unica manera que el programa se muera es diciendole Cmd+c en la terminal
+
+**CONCLUSIÓN:**
+**Unidad 4** Se construyo el `MicrobitV2Adapter.js` para el protocolo ASCII con framing (`$T:|X:|Y:|A:|B:|CHK:\n`). 
+
+- `BaseAdapter.js` → clase base
+- `MicrobitASCIIAdapter.js` → referencia de cómo se hace
+- `bridgeServer.js` → registra los adapters
+- `bridgeClient.js` → transporte WebSocket
+- `sketch.js` + `fsm.js` → frontend con máquina de estado
+
+---
 
 ## Bitácora de reflexión
+### DESARROLLO ACTIVIDAD #3
+***Diagrama de flujo detallado**
+
+```
+@startuml
+<style>
+root {
+  BackgroundColor #f7f9fc
+  FontColor #2d3748
+  LineColor #718096
+  Margin 20
+  Padding 10
+}
+sequenceDiagram {
+  arrow {
+    LineColor #4a5568
+    FontColor #4a5568
+  }
+  participant {
+    BackgroundColor #edf2f7
+    LineColor #4a5568
+    FontColor #2d3748
+    RoundCorner 8
+  }
+  note {
+    BackgroundColor #fefcbf
+    LineColor #d69e2e
+    FontColor #744210
+  }
+}
+</style>
+
+title Flujo de Datos — Unidad 4 (Protocolo ASCII con CHK)
+
+participant "micro:bit\n(firmware Python)" as MB
+participant "MicrobitV2Adapter\n(Node.js)" as ADAPTER
+participant "bridgeServer\n(Node.js)" as SERVER
+participant "bridgeClient\n(Browser)" as CLIENT
+participant "PainterTask FSM\n(sketch.js)" as FSM
+participant "Canvas\n(p5.js)" as CANVAS
+
+MB -> ADAPTER : ""$T:45020|X:-245|Y:12|A:1|B:0|CHK:258\n""\n〔ASCII · 115200 baud · 10 Hz · longitud variable〕
+
+note over MB
+  Firmware Python:
+  t = running_time()
+  chk = |X| + |Y| + |A| + |B|
+  Botones como 0/1 (no True/False)
+  $ = marcador de inicio de trama
+  \n = delimitador de fin de trama
+end note
+
+note over ADAPTER
+  PASO 1 — Acumula chunks en string buffer (buf)
+  PASO 2 — Busca \n → extrae línea completa
+  PASO 3 — split("|") → espera exactamente 6 valores
+           split(":")[1] extrae valor tras etiqueta
+           T, X, Y, A, B, CHK
+  PASO 4 — Valida CHK:
+           calculo = |X| + |Y| + |A| + |B|
+           si calculo ≠ CHK → console.warn + descarta
+  PASO 5 — Emite objeto limpio:
+           { x, y, btnA: A===1, btnB: B===1 }
+  $ y T entran al adapter y mueren aquí.
+  buf > 4096 bytes → se limpia (overflow guard)
+end note
+
+ADAPTER -> SERVER : ""{ x: int, y: int, btnA: bool, btnB: bool }""
+
+note over SERVER
+  Instanciado con:
+  node bridgeServer.js --device microbit-bin
+  if (DEVICE === "microbit-bin")
+    → new MicrobitV2Adapter(...)
+  Reemplaza T del micro:bit por nowMs()
+  (reloj del servidor, más confiable)
+  Empaqueta y hace broadcast por WebSocket
+end note
+
+SERVER -> CLIENT : ""WebSocket · puerto 8081""\n""{ type:""microbit"", x, y, btnA, btnB, t }""
+
+note over CLIENT
+  bridgeClient.js — no se modifica.
+  Recibe JSON del WebSocket.
+  Dispara postEvent con EVENTS.DATA
+  Es la frontera entre Node.js y p5.js.
+end note
+
+CLIENT -> FSM : ""postEvent({ type: EVENTS.DATA, payload })""\n〔payload = { x, y, btnA, btnB }〕
+
+note over FSM
+  estado_corriendo → updateLogic(data):
+  circleResolution = int(map(y, -2048, 2047, 2, 10))
+  radius = map(x, -2048, 2047, -width/2, width/2)
+  btnA → activa el dibujo (antes: mouseIsPressed)
+  btnB → activa el relleno (antes: keyIsPressed)
+  updateLogic: única capa con matemática.
+  drawRunning: solo lee rxData, no calcula.
+end note
+
+FSM -> CANVAS : ""drawRunning()""\nDibuja polígono si btnA == true\nFill azul si btnB == true
+
+note over CANVAS
+  translate(width/2, height/2)
+  angle = TAU / circleResolution
+  beginShape() → vertex(cos·r, sin·r) × circleResolution
+  fill(34,45,122,50) si btnB, noFill() si no
+end note
+
+@enduml
+```
+
+
