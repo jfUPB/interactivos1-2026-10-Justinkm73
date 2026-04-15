@@ -49,6 +49,45 @@ Si en cambio ves símbolos raros, caracteres extraños o números sin sentido �
 
 https://www.asciitable.com/ (Acá esta la tabla ASCII) para saber que información se está enviando
 
+#### Como levantar un servidor:
+
+Luego de tener el repositorio copiado en descargas o en el pc, vamos a instalar https://nodejs.org/en/download por que el navegador no puede hablar directamente con el micro:bit. El navegador vive en una "burbuja de seguridad" — por diseño no tiene acceso directo al puerto serial (USB) de tu computador, porque sería un riesgo de seguridad enorme que cualquier página web pudiera leer tus dispositivos.
+
+   ```
+   micro:bit (USB/Serial)
+        ↓
+   Node.js - bridgeServer.js   ← aquí está el "puente"
+        ↓
+   Navegador - p5.js sketch
+   ```
+
+Node.js puede, acceder al puerto serial del computador, leer los datos del micro:bit y pasarlos al navegador vía WebSocket. *Necesito instalar unas dependencias desde la terminal, para node.js*
+
+$ npm install -> Abro la terminal y escribo esto, ejecutando la terminal desde la carpeta, escribo -> node.js (doy enter) -> $ npm install (doy enter)
+
+Levantamos el servidor, luego de tener instalado las extenciones:
+
+1. Abro la terminal desde la carpeta de caso de estudio
+2. Escribo $ nodeb -> presiono tabulador y me lo completa $ nodebridge -> luego le agrego la S -> $ node bridgeS -> y doy tabulador para que se complete sola $ node bridgeServer.js, aquí el servidor empieza a correr.
+3. En caso de querer pararlo presionar cmd + c.
+
+#### Profundización:
+
+En la programación orientada a objetos, cuando uno declara una interfaz, esta declarando muchos metodos.
+
+
+<img width="1140" height="560" alt="image" src="https://github.com/user-attachments/assets/4b853814-279e-4894-b82e-e703c38a7991" />
+
+
+Este patrón de diseño llamado estrategy, lo vamos a implementar, puedo utilizar metodos que me facilitan las clases, y en vez de aprender con cada clase, más bien lo definimos en una interfaz generica que nos permite interactuar con cualquier de las tres, este patron lo tenemos en un archivo que se llama **BaseAdapter**.
+
+El BaseAdapter va conectado al server y los va a transformando, no importa de donde venga, el BaseAdapter le pasa la información al server como la necesite. Luego el server enviara datos normalizados y llegaran a una interfaz (Cliente). Este se encargara de comunicarse con el servidor. En este casó para el caso de estudio que son unas visuales necesitaremos unos archivos que son fsm.js (maquina de estados), sketch.js (Implementa toda la función gráfica) y el index cambiara información con el server y el server con el p5.js y asi sucesivamente entre archivos.
+
+<img width="1600" height="775" alt="image (1)" src="https://github.com/user-attachments/assets/908c80c6-3a01-4c87-a499-51256a19ca05" />
+
+
+
+
 ---
 
 ## Bitácora de aplicación 
