@@ -1,14 +1,27 @@
 # Unidad 1
 
 ## Bitácora de proceso de aprendizaje
-### Actividad_01 (21 DE ENERO, 2026)
+
+### Actividad 01
+
 #### ¿Qué es un sistema físico interactivo?
 Para mí, un sistema físico interactivo es la relación y creación entre el cuerpo y el espacio, ya sea a través de una computadora, mediante código, o por medio de interacciones físicas en un entorno real y tangible. Esta relación permite la interactividad entre un elemento y otro, haciendo posible que ocurran acciones y respuestas reales.
 
 #### ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
 Desde mi perfil profesional puedo aplicar esto en muchas áreas del arte y la ciencia, como la creación de experiencias inmersivas para eventos, el uso de código creativo en videojuegos o proyectos musicales. Es un panorama muy amplio que me permite experimentar, mezclar disciplinas y crear propuestas artísticas y tecnológicas de forma más libre y cercana a las personas.
 
-### Actividad_04 (28 DE ENERO, 2026)
+---
+
+### Actividad 02
+
+#### ¿Qué es el diseño/arte generativo?
+Es la creación de obras por medio de patrones, superposiciones entre otras técnicas.
+
+#### ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
+Diseño de experencia en tiempo real para eventos, interacción de elementos que permitan al usuario sentir una nueva vivencia.
+
+
+### Actividad_04
 #### ¿Por qué no funcionaba el programa con was_pressed() y por qué funciona con is_pressed()? Explica detalladamente.
 
 #### PROGRAMA micro:bit.
@@ -39,6 +52,14 @@ La acción solicitada para está actividad consistía en que el programa cambiar
 
 la interacción requería un estado continuo y no un evento puntual, por está razón usamos el was_pressed
 El cambio se realiza en el código del micro:bit.
+
+
+
+
+
+
+
+## Bitácora de aplicación 
 
 ### Actividad_05 (28 DE ENERO, 2026)
 #### Crea un programa en p5.js que muestre un círculo en la pantalla. Utiliza los botones A y B del micro:bit para controlar la posición en x del círculo en el canvas de p5.js.
@@ -188,7 +209,11 @@ connectBtn.html('Disconnect');
 ```
 
 
-### Actividad_06
+
+
+## Bitácora de reflexión
+
+### Actividad 06
 Vas a repasar lo aprendido en esta unidad. Regresa a la actividad 4 y trata de explicar en tus propias palabras de la manera más detallada que puedas cómo funciona el sistema físico interactivo. Analiza cada parte del código y su función dentro del sistema. Si aún tienes dudas sobre alguna parte, aprovecha para aclararlas.
 
 
@@ -294,14 +319,6 @@ Aca le damos la función al boton que si está abierto se comunique por 115200 b
   }
 ```
 
-
-
-
-## Bitácora de aplicación 
-
-
-
-## Bitácora de reflexión
 
 
 
