@@ -7,23 +7,507 @@
 ### DESARROLLO ACTIVIDAD #4
 
 **RESPUESTA**
+Para este ejercicio use lo aprendido en la unidad #1, como conectar sistemas embebidos, Unidad #2 Machin State Fine, Unidad #3 Continuidad FSM y unión con p5.js
 
-*PROGRAMAS*
+**PROGRAMAS p5.js**
 
-
-
-
-**style.css**
 ```
+//fsm.js
+
+const ENTRY = "ENTRY";
+const EXIT = "EXIT";
+
+class Timer {
+  constructor(owner, eventToPost, duration) {
+    this.owner = owner;
+    this.event = eventToPost;
+    this.duration = duration;
+    this.startTime = 0;
+    this.active = false;
+  }
+
+  start(newDuration = null) {
+    if (newDuration !== null) this.duration = newDuration;
+    this.startTime = millis();
+    this.active = true;
+  }
+
+  stop() {
+    this.active = false;
+  }
+
+  update() {
+    if (this.active && millis() - this.startTime >= this.duration) {
+      this.active = false;
+      this.owner.postEvent(this.event);
+    }
+  }
+}
+
+class FSMTask {
+  constructor() {
+    this.queue = [];
+    this.timers = [];
+    this.state = null;
+  }
+
+  postEvent(ev) {
+    this.queue.push(ev);
+  }
+
+  addTimer(event, duration) {
+    let t = new Timer(this, event, duration);
+    this.timers.push(t);
+    return t;
+  }
+
+  transitionTo(newState) {
+    if (this.state) this.state(EXIT);
+    this.state = newState;
+    this.state(ENTRY);
+  }
+
+  update() {
+    for (let t of this.timers) {
+      t.update();
+    }
+    while (this.queue.length > 0) {
+      let ev = this.queue.shift();
+      if (this.state) this.state(ev);
+    }
+  }
+}
+```
+
+
+
+
+```
+//index.html
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sketch</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.js"></script>
+
+<script src="https://unpkg.com/@gohai/p5.webserial@^1/libraries/p5.webserial.js"></script>
+
+  </head>
+
+  <body>
+    <script src="fsm.js"></script>
+    <script src="sketch.js"></script>
+  </body>
+</html>
+```
+
+
+```
+//sketch.js
+
+const TIMER_LIMITS = {
+  min: 15,
+  max: 25,
+  defaultValue: 20,
+};
+
+const EVENTS = {
+  DEC: "A",
+  INC: "B",
+  START: "S",
+  TICK: "Timeout",
+};
+
+// ─────────────────────────────────────────────
+//  Temporizador — Máquina de Estados
+// ─────────────────────────────────────────────
+class Temporizador extends FSMTask {
+  constructor(minValue, maxValue, defaultValue) {
+    super();
+    this.minValue     = minValue;
+    this.maxValue     = maxValue;
+    this.defaultValue = defaultValue;
+    this.configValue  = defaultValue;
+    this.totalSeconds = defaultValue;
+    this.remainingSeconds = defaultValue;
+
+    // Secuencia para detectar A-B-A mientras está corriendo / pausado
+    this.sequence = [];
+
+    this.myTimer = this.addTimer(EVENTS.TICK, 1000);
+    this.transitionTo(this.estado_config);
+  }
+
+  get currentState() {
+    return this.state;
+  }
+
+  // ── Estado 1: Configuración ──────────────────
+  estado_config = (ev) => {
+    if (ev === ENTRY) {
+      this.configValue = this.defaultValue;
+      this.sequence    = [];
+    } else if (ev === EVENTS.DEC) {
+      if (this.configValue > this.minValue) this.configValue--;
+    } else if (ev === EVENTS.INC) {
+      if (this.configValue < this.maxValue) this.configValue++;
+    } else if (ev === EVENTS.START) {
+      this.totalSeconds     = this.configValue;
+      this.remainingSeconds = this.totalSeconds;
+      this.transitionTo(this.estado_armed);
+    }
+  };
+
+  // ── Estado 2: Corriendo ──────────────────────
+  estado_armed = (ev) => {
+    if (ev === ENTRY) {
+      this.sequence = [];       // limpia secuencia al entrar
+      this.myTimer.start();
+    } else if (ev === EXIT) {
+      this.myTimer.stop();      // siempre detiene el timer al salir
+    } else if (ev === EVENTS.TICK) {
+      if (this.remainingSeconds > 0) {
+        this.remainingSeconds--;
+        if (this.remainingSeconds === 0) {
+          this.transitionTo(this.estado_timeout);
+        } else {
+          this.myTimer.start(); // reinicia para el siguiente segundo
+        }
+      }
+    } else if (ev === EVENTS.DEC) {
+      // "A" mientras corre → PAUSA y arranca la secuencia A-B-A
+      this.sequence = ["A"];
+      this.transitionTo(this.estado_paused);
+    }
+    // "B" mientras corre no hace nada (solo sirve en config)
+  };
+
+  // ── Estado 3: Pausado ────────────────────────
+  //   Detecta A-B-A para volver a config
+  //   Cualquier "A" que no complete la secuencia → reanuda
+  estado_paused = (ev) => {
+    if (ev === ENTRY) {
+      // El timer ya se detuvo por el EXIT de estado_armed
+    } else if (ev === EVENTS.INC) {
+      // "B": solo avanza la secuencia si el paso previo fue "A"
+      if (this.sequence.length === 1 && this.sequence[0] === "A") {
+        this.sequence.push("B");
+      } else {
+        // Secuencia rota → reinicia pero sigue pausado
+        this.sequence = [];
+      }
+    } else if (ev === EVENTS.DEC) {
+      // "A": intenta completar la secuencia
+      this.sequence.push("A");
+      if (this.sequence.join("") === "ABA") {
+        // ¡Contraseña correcta! → vuelve a configurar
+        this.sequence = [];
+        this.transitionTo(this.estado_config);
+      } else {
+        // No era A-B-A → reanuda el conteo
+        this.sequence = [];
+        this.transitionTo(this.estado_armed);
+      }
+    }
+  };
+
+  // ── Estado 4: Timeout ────────────────────────
+  estado_timeout = (ev) => {
+    if (ev === ENTRY) {
+      console.log("¡TIEMPO!");
+    } else if (ev === EVENTS.DEC) {
+      this.transitionTo(this.estado_config);
+    }
+  };
+}
+
+// ─────────────────────────────────────────────
+//  Variables globales
+// ─────────────────────────────────────────────
+let temporizador;
+let serial;
+const renderer = new Map();
+
+// ─────────────────────────────────────────────
+//  p5.js setup
+// ─────────────────────────────────────────────
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  textAlign(CENTER, CENTER);
+
+  temporizador = new Temporizador(
+    TIMER_LIMITS.min,
+    TIMER_LIMITS.max,
+    TIMER_LIMITS.defaultValue
+  );
+
+  // WebSerial (p5.webserial)
+  serial = createSerial();
+
+  // Mapa estado → función de dibujo
+  renderer.set(temporizador.estado_config,  () => drawConfig(temporizador.configValue));
+  renderer.set(temporizador.estado_armed,   () => drawArmed(temporizador.remainingSeconds, temporizador.totalSeconds));
+  renderer.set(temporizador.estado_paused,  () => drawPaused(temporizador.remainingSeconds, temporizador.totalSeconds));
+  renderer.set(temporizador.estado_timeout, () => drawTimeout());
+}
+
+// ─────────────────────────────────────────────
+//  p5.js draw  ←  equivale al while True del microbit
+// ─────────────────────────────────────────────
+function draw() {
+  // 1. Leer datos del micro:bit por serial
+  if (serial.available() > 0) {
+    let data = serial.readUntil("\n").trim();
+    if (data === "A" || data === "B" || data === "S") {
+      temporizador.postEvent(data);
+    }
+  }
+
+  // 2. Actualizar la máquina de estados
+  temporizador.update();
+
+  // 3. Dibujar el estado actual
+  renderer.get(temporizador.currentState)?.();
+
+  // 4. Botón de conexión serial (siempre encima)
+  drawSerialButton();
+}
+
+// ─────────────────────────────────────────────
+//  Pantallas de cada estado
+// ─────────────────────────────────────────────
+
+function drawConfig(val) {
+  background(10, 20, 50);
+
+  // Título
+  fill(80, 120, 255);
+  textSize(16);
+  text("CONFIGURAR TIEMPO", width / 2, height / 2 - 140);
+
+  // Número grande
+  fill(255);
+  textSize(130);
+  text(val, width / 2, height / 2 - 10);
+
+  // Barra de progreso
+  let prog = map(val, TIMER_LIMITS.min, TIMER_LIMITS.max, 0, 1);
+  noFill();
+  stroke(50, 60, 100);
+  strokeWeight(8);
+  rectMode(CENTER);
+  rect(width / 2, height / 2 + 90, 260, 12, 6);
+  fill(80, 120, 255);
+  noStroke();
+  rectMode(CORNER);
+  rect(width / 2 - 130, height / 2 + 84, 260 * prog, 12, 6);
+  rectMode(CENTER);
+
+  // Ayuda
+  textSize(16);
+  fill(130, 150, 200);
+  text("A  →  bajar    B  →  subir    S  →  iniciar", width / 2, height / 2 + 130);
+  text("micro:bit: botón A / B / agitar", width / 2, height / 2 + 155);
+}
+
+function drawArmed(val, total) {
+  background(15, 15, 20);
+
+  let pulse = sin(frameCount * 0.08) * 8;
+  let ratio = val / total;
+  let ringColor = lerpColor(color(255, 60, 60), color(80, 220, 120), ratio);
+
+  // Anillo de fondo
+  noFill();
+  strokeWeight(18);
+  stroke(red(ringColor), green(ringColor), blue(ringColor), 35);
+  ellipse(width / 2, height / 2, 280);
+
+  // Arco de progreso
+  stroke(ringColor);
+  strokeWeight(18);
+  let angle = map(val, 0, total, 0, TWO_PI);
+  arc(width / 2, height / 2, 280, 280, -HALF_PI, angle - HALF_PI);
+
+  // Número
+  fill(255);
+  noStroke();
+  textSize(110 + pulse);
+  text(val, width / 2, height / 2);
+
+  // Instrucciones
+  textSize(15);
+  fill(140);
+  text("A → pausar     A-B-A → volver a configurar", width / 2, height / 2 + 175);
+}
+
+function drawPaused(val, total) {
+  background(15, 15, 20);
+
+  let ratio  = val / total;
+  let blink  = frameCount % 50 < 25;
+
+  // Anillo atenuado
+  noFill();
+  strokeWeight(18);
+  stroke(80, 100, 220, 40);
+  ellipse(width / 2, height / 2, 280);
+
+  stroke(80, 100, 220, blink ? 200 : 80);
+  let angle = map(val, 0, total, 0, TWO_PI);
+  arc(width / 2, height / 2, 280, 280, -HALF_PI, angle - HALF_PI);
+
+  // Número (parpadea)
+  fill(blink ? color(100, 130, 255) : color(60, 80, 180));
+  noStroke();
+  textSize(110);
+  text(val, width / 2, height / 2);
+
+  // Etiqueta PAUSADO
+  fill(100, 130, 255);
+  textSize(20);
+  text("⏸  PAUSADO", width / 2, height / 2 - 170);
+
+  // Secuencia actual
+  let seqDisplay = temporizador.sequence.join(" - ") || "—";
+  textSize(14);
+  fill(100, 100, 160);
+  text("secuencia: " + seqDisplay, width / 2, height / 2 + 145);
+
+  textSize(15);
+  fill(140);
+  text("A → reanudar     A-B-A → volver a configurar", width / 2, height / 2 + 175);
+}
+
+function drawTimeout() {
+  let blink = frameCount % 24 < 12;
+  background(blink ? color(160, 0, 0) : color(220, 20, 20));
+
+  fill(255);
+  noStroke();
+  textSize(110);
+  text("¡TIEMPO!", width / 2, height / 2 - 20);
+
+  textSize(18);
+  fill(255, 180, 180);
+  text("A → volver a configurar", width / 2, height / 2 + 90);
+}
+
+// ─────────────────────────────────────────────
+//  Botón de conexión WebSerial
+// ─────────────────────────────────────────────
+function drawSerialButton() {
+  let connected = serial.opened();
+  let bx = 20, by = 20, bw = 200, bh = 38;
+
+  // Fondo del botón
+  fill(connected ? color(0, 140, 80) : color(140, 40, 0));
+  noStroke();
+  rectMode(CORNER);
+  rect(bx, by, bw, bh, 8);
+
+  // Texto
+  fill(255);
+  textSize(13);
+  textAlign(LEFT, CENTER);
+  text(connected ? "✅  micro:bit conectado" : "🔌  Conectar micro:bit", bx + 12, by + bh / 2);
+  textAlign(CENTER, CENTER);
+}
+
+// ─────────────────────────────────────────────
+//  Eventos de ratón y teclado
+// ─────────────────────────────────────────────
+function mousePressed() {
+  // Clic en el botón de conexión
+  if (mouseX >= 20 && mouseX <= 220 && mouseY >= 20 && mouseY <= 58) {
+    if (!serial.opened()) {
+      serial.open(115200);
+    } else {
+      serial.close();
+    }
+  }
+}
+
+function keyPressed() {
+  if (key === "a" || key === "A") temporizador.postEvent("A");
+  if (key === "b" || key === "B") temporizador.postEvent("B");
+  if (key === "s" || key === "S") temporizador.postEvent("S");
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+```
+
+
+```
+//style.css
+
 html, body {
   margin: 0;
   padding: 0;
 }
-
 canvas {
   display: block;
 }
 ```
+
+**PROGRAMAS MICROBIT**
+```
+//main.py
+
+from microbit import *
+import utime
+
+while True:
+    if button_a.was_pressed():
+        print("A")        
+
+    if button_b.was_pressed():
+        print("B")         
+
+    if accelerometer.was_gesture("shake"):
+        print("S")        
+
+    utime.sleep_ms(20)
+```
+
+**NOTAS**:
+EJEMPLOS DE COMO FUNCIONA UNA MAQUINA DE ESTÁDO:
+
+ESTADO —— > EVENTO —-> Transiciones
+
+EJEMPLO CON  EL CÓDIGO DEL SEMAFORO:
+
+Estados: ("situaciones”)
+estado_config → configurando el tiempo
+estado_armed → contando regresivamente
+estado_timeout → la alarma sonando
+
+Eventos: ("cosas que pasan" )
+Alguien presionó el botón A → evento "A"
+Se acabó el tiempo → evento "Timeout"
+Se agitó el micro:bit → evento "S"
+
+Transiciones: (“Reglas”)
+Si estás en config y pasa "S" → ve a config y pasa "S" → ve a armedontador llega a 0 → ve a timeout
+Si estás en timeout y pasa "A" → regresa a config
+
+<img width="674" height="600" alt="image" src="https://github.com/user-attachments/assets/538f1cb2-06dd-4b3a-b78c-a2553fc0c729" />
+
+
+**Tener en cuenta que:**
+
+was_pressed = evento
+is_pressed = estado
+
 
 ## Bitácora de reflexión
 
