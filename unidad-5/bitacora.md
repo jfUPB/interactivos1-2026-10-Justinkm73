@@ -1,5 +1,74 @@
 # Unidad 5
 ## Bitácora de proceso de aprendizaje
+### DESARROLLO ACTIVIDAD #1
+
+**PASO 1**
+
+1. ¿Qué ventajas y desventajas ves en usar un formato binario en lugar de texto ASCII?
+2. Si xValue=500, yValue=524, aState=True, bState=False, ¿cómo se vería el paquete en hexadecimal? (Pista: convierte cada valor según su tipo y anota los bytes en orden.) Respuesta esperada: 01 F4 02 0C 01 00
+
+**Respuesta**
+
+1. En binario puedo ahorrarme bytes y hacer que la información que se va a recibir sea más corta, el sistema BINARY siempre enviara exactamente 6 bytes, mientras que ASCII depende de cuantos valores enviare para así generar la cadena de valores por cada valor.
+
+2. Si xValue=500, yValue=524, aState=True, bState=False, ¿cómo se vería el paquete en hexadecimal? (Pista: convierte cada valor según su tipo y anota los bytes en orden.) Respuesta esperada: 01 F4 02 0C 01 00
+
+https://juanferfranco.github.io/serialTerminal/ (Aca nos llegaran valores del microbit y los convierte a hex, True = 1 y false = 0, luego en la calculadora en modo programación escribimos el valor transformado en hex  y al escribirlos en la calculadora, este nos dara el valor en BINARY. (01 F4 02 0C 01 00). El problema de los protocolos binarios son los problemas de sicronización. Tengo que añadir más información (+1Byte) para saber donde inician los datos.
+
+
+
+**PASO 2**
+
+1. ¿Por qué el protocolo ASCII de la unidad anterior no tenía este problema de sincronización? (Pista: piensa en qué rol cumplía el carácter \n.)
+
+2. ¿Por qué en binario no podemos usar \n como delimitador?
+
+**Respuesta**
+
+1. Por que en el protocolo ASCII usamos \n  para indicar fin de la trama, se usa como delimitador.
+
+2. En BINARY no usamos el caracter \n por que un mensaje en BINARY puede interpretar este caracter como un valor más que nos llega, la solución sirve realizando un Checksum.
+
+
+
+**PASO 3**
+
+1. ¿Cuántos bytes tiene el paquete completo con framing? ¿Cuántos más que sin framing?
+
+2. ¿Qué pasa si un byte de datos tiene el valor 0xAA (170 en decimal)? ¿Podría el receptor confundirlo con un header? ¿Cómo ayuda el checksum en este caso?
+
+**Respuesta**
+
+1. El protocolo final usa un paquete de 8 bytes, Son 2 bytes más que sin framing: uno de header (0xAA) para sincronización y uno de checksum para verificar integridad.
+
+*NOTAS:*
+
+Las filas de X e Y ocupan 2 bytes cada una, aunque sean una sola fila en la tabla.
+
+```
+Casilla:  [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]
+          0xAA  X    X    Y    Y    A    B   CHK
+```
+La razón por la que necesita 2 bytes es por el *rango del número*:
+
+- 1 byte → puede guardar valores de 0 a 255
+- 2 bytes → puede guardar valores de -32768 a 32767
+
+El acelerómetro del micro:bit devuelve valores entre *-2048 y 2048*, entonces 1 byte no alcanza. Necesita 2 bytes para caber.
+
+Es como preguntar ¿por qué el número 500 necesita 3 dígitos? Porque con 2 dígitos solo llegas al 99.
+
+
+2. ```0xAA``` = (10 × 16) + (10 × 1) = 160 + 10 = 170 en decimal, y se usa para la sincronización del inicio del paquete. Podría confundirse debido a que los datos de X ó Y pueden ser valores desde -2048 hasta 2048, y podríamos caer en el 170 como dato. Si el receptor busca ```0xAA``` para sincronizarse, podría confundir ese byte de datos con un inicio de paquete. En este caso, el checksum nos ayudaría a detectar que ese paquete es inválido, porque al realizar la suma de los bytes 1 al 6 el resultado no va a coincidir con el byte 7. Entonces el receptor descarta ese byte y vuelve a buscar un ```0xAA``` válido, repitiendo el proceso hasta lograr una sincronización correcta verificada con el checksum.
+
+*NOTAS:*
+
+En el caso del ejercicio que nos comparte el docente el checksum se calcula así:
+
+```
+checksum = sum(data) % 256]
+```
+
 
 
 ## Bitácora de aplicación
@@ -330,6 +399,7 @@ async function findMicrobitPort() {
 // En la función `createAdapter`(Creamos nuestro adapter) if (DEVICE ==="microbit-bin-2") -> MicrobitBinaryAdapter
 // instanciar el adapter que usare, en la siguiente linea: return new MicrobitBinaryAdapter({ path, baud: BAUD, verbose: VERBOSE });
 
+// Escribimos nuestro adapter generico
 async function createAdapter() {
   if (DEVICE === "microbit") {
     const path = SERIAL_PATH ?? await findMicrobitPort();
@@ -353,7 +423,7 @@ async function createAdapter() {
     return new MicrobitV2Adapter({ path, baud: BAUD, verbose: VERBOSE });
   }
 
-// Descomentamos nuestro nuevo adapter, el docente lo había puesto.
+// Descomentamos nuestro nuevo adapter, para binario.
   if (DEVICE === "microbit-bin-2") { // OJO! Cuando levantemos el servidor instanciamos con el nombre que le pusimos acá, no con el del archivo .js
     const path = SERIAL_PATH ?? await findMicrobitPort();
     if (!path) {
