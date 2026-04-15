@@ -41,6 +41,7 @@ https://juanferfranco.github.io/serialTerminal/ (Aca nos llegaran valores del mi
 
 1. El protocolo final usa un paquete de 8 bytes, Son 2 bytes más que sin framing: uno de header (0xAA) para sincronización y uno de checksum para verificar integridad.
 
+
 *NOTAS:*
 
 Las filas de X e Y ocupan 2 bytes cada una, aunque sean una sola fila en la tabla.
@@ -59,6 +60,7 @@ El acelerómetro del micro:bit devuelve valores entre *-2048 y 2048*, entonces 1
 Es como preguntar ¿por qué el número 500 necesita 3 dígitos? Porque con 2 dígitos solo llegas al 99.
 
 
+
 2. ```0xAA``` = (10 × 16) + (10 × 1) = 160 + 10 = 170 en decimal, y se usa para la sincronización del inicio del paquete. Podría confundirse debido a que los datos de X ó Y pueden ser valores desde -2048 hasta 2048, y podríamos caer en el 170 como dato. Si el receptor busca ```0xAA``` para sincronizarse, podría confundir ese byte de datos con un inicio de paquete. En este caso, el checksum nos ayudaría a detectar que ese paquete es inválido, porque al realizar la suma de los bytes 1 al 6 el resultado no va a coincidir con el byte 7. Entonces el receptor descarta ese byte y vuelve a buscar un ```0xAA``` válido, repitiendo el proceso hasta lograr una sincronización correcta verificada con el checksum.
 
 *NOTAS:*
@@ -68,6 +70,50 @@ En el caso del ejercicio que nos comparte el docente el checksum se calcula así
 ```
 checksum = sum(data) % 256]
 ```
+
+suma todos los bytes de datos (1 al 6) y saca el residuo de dividirlo entre 256.
+
+*¿Cómo lo usa el receptor para verificar?*
+
+1. Recibe el paquete de 8 bytes
+2. Suma los bytes del 1 al 6 por su cuenta
+3. Le saca `% 256`
+4. Compara ese resultado con el byte 7 (el checksum que mandó el micro:bit)
+- Si *coinciden* → paquete válido
+- Si *no coinciden* → algo está mal, descarta
+
+*Los 6 bytes de datos son*: `01 F4 02 0C 01 00`  (Ejemplo con el ejercicio del docente de la unidad 5)
+
+*PASOS*
+
+*Paso 1 —* convertir cada uno a decimal:
+
+- `01` = 1
+- `F4` = 244
+- `02` = 2
+- `0C` = 12
+- `01` = 1
+- `00` = 0
+
+*Paso 2 —* sumarlos (`sum(data)`):`1 + 244 + 2 + 12 + 1 + 0 = 260`
+
+*Paso 3 —* aplicar **`% 256`:**`260 % 256 = 4`
+
+*Ese 4 es el checksum**, y se agrega al final del paquete:
+```
+[AA] [01] [F4] [02] [0C] [01] [00] [04]
+ ↑ header                           ↑ checksum
+ ```
+
+Así queda el paquete completo de 8 bytes.
+
+Luego, el receptor recibe esos 8 bytes y hace exactamente lo mismo:
+
+**Toma los bytes 1 al 6 y los suma**: `1 + 244 + 2 + 12 + 1 + 0 = 260 % 256 = 4`
+
+**Luego mira el byte 7 del paquete recibido** → es `04` = 4
+
+**Compara**: `4 == 4`  → paquete válido
 
 
 
