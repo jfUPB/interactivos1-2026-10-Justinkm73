@@ -386,6 +386,13 @@ WaitInYellow --> WaitInRed : Timeout
 
 
 
+
 ## Bitácora de reflexión
+
+Termino Herencia en código:
+
+Cuando yo cree un objeto de tipo semaforo del objeto que tengamo entre parentesis heredara todo lo que tenga la clase, casí hoy en día no lo usan por que tiene sus cierto problemas pero para una maquina de estado funciona perfecto
+
+Leer más sobre los mecanismos  de atención (En código) en la IA2
 
 
