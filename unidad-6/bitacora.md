@@ -298,6 +298,16 @@ La sincronización es buena — ```timestamp``` y ```now``` están muy cerca, no
 
 Y mira el orden de los sonidos en la consola: hh → oh → bd → bd → sd → hh → oh → bd → bd → sd. Eso coincide exactamente con el patrón [bd*2 sd hh oh] de Strudel. El sistema está funcionando correctamente.
 
+*NOTA:*
+
+Si no está en sincronía, revisamos que:
+
+1.  ```StrudelAdapter._normalize``` — verificar que timestamp que llega de Strudel ya viene en milisegundos. Si viene en segundos o en otro formato, ```Date.now()``` nunca lo va a alcanzar correctamente.
+
+2. ```checkStrudelQueue``` — verificar que la comparación ```this.strudelQueue[0].timestamp <= now``` tiene sentido. Si ```timestamp``` es un número enorme comparado con ```now```, los eventos nunca se activan.
+
+```drawRunning``` — verificar que ```sv.active``` está siendo leído correctamente y que background(255) limpia el canvas cada frame.
+
 
 
 
