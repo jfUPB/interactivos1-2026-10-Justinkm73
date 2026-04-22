@@ -308,6 +308,133 @@ Si no está en sincronía, revisamos que:
 
 ```drawRunning``` — verificar que ```sv.active``` está siendo leído correctamente y que background(255) limpia el canvas cada frame.
 
+**6. Qué problemas encontraste y cómo los solucionaste**
+
+*Problema 01: WebSocket en lugar de SerialPort*
+
+Los adapters de las unidades anteriores usan SerialPort para leer un puerto físico. Strudel corre en el navegador y envía por WebSocket. La solución fue reemplazar la dependencia:
+
+```
+// StrudelAdapter.js
+const { WebSocketServer } = require("ws");  // <- en lugar de SerialPort
+```
+
+Y en lugar de abrir un puerto serial en connect(), se levanta un servidor WebSocket:
+
+```
+async connect() {
+    await new Promise((resolve, reject) => {
+      this._wss = new WebSocketServer({ port: this._port });
+      this._wss.once("listening", resolve);
+      this._wss.once("error", reject);
+    });
+    // ...
+}
+```
+
+*Problema 02: El adapter de Strudel no necesita esperar un comando "connect" - Auto-conexión*
+
+Los adapters de hardware esperan que el usuario haga clic en "Connect" porque hay un dispositivo físico que puede no estar enchufado. Strudel no tiene ese problema. La solución está en bridgeServer.js:
+
+```
+// bridgeServer.js
+if (DEVICE === "sim" || DEVICE === "strudel") {
+    await adapter.connect();  // <- levanta el WS server inmediatamente
+}
+```
+
+o sea:
+
+En las unidades anteriores el flujo era:
+
+El usuario abre el frontend
+Hace clic en "Connect"
+bridgeClient envía {cmd: "connect"} al bridge
+El bridge llama adapter.connect()
+El adapter intenta abrir el puerto serial y encontrar el micro:bit
+
+Ese flujo existe porque el micro:bit puede no estar enchufado cuando arranca el servidor. Si intentas conectarte antes de que esté listo, falla.
+
+Strudel es diferente porque:
+
+No es hardware físico
+Es una página web que tú controlas
+El servidor WS del adapter solo necesita estar escuchando — no tiene que "encontrar" nada
+
+Entonces si esperaras el clic de "Connect" para levantar el servidor WS, Strudel intentaría conectarse al puerto 8080 y no encontraría nada escuchando. Por eso en bridgeServer.js se llama adapter.connect() directamente al arrancar, sin esperar ningún comando del usuario.
+
+En otras palabras: con hardware esperas al usuario porque el dispositivo puede no estar listo. Con Strudel esperas a Strudel, y Strudel solo necesita que el puerto 8080 esté abierto desde el principio.
+
+
+*Problema 03: bridgeServer.js reemplazaba el timestamp de Strudel*
+
+Para los mensajes de microbit, el servidor usa ```nowMs()``` porque el micro:bit no envía timestamp. Si se hubiera aplicado la misma lógica a Strudel, se habría perdido el timestamp original y el scheduling habría sido imposible. La solución fue distinguir por tipo en ```adapter.onData```
+
+
+```
+// bridgeServer.js
+adapter.onData = (d) => {
+    if (d.type === "strudel") {
+        broadcast(wss, d);          // <- reenvía el objeto completo sin tocar el timestamp
+    } else {
+        broadcast(wss, {
+            type: "microbit",
+            x: d.x, y: d.y,
+            btnA: !!d.btnA, btnB: !!d.btnB,
+            t: nowMs()              // <- solo para microbit usa el tiempo del servidor
+        });
+    }
+};
+```
+
+*Problema 04: El visual de Strudel no desaparecía entre eventos*
+
+Si no se limpia el canvas cada frame, los shapes de eventos anteriores quedan dibujados permanentemente en el strudel. La solución fue añadir ```background(255)``` dentro del bloque de Strudel para que solo limpie los shapes cuando sucede un evento dentro Strudel, no lo puedo poner al inicio de ```drawRunning``` porque borra el rastro del ```micro:bit```, Así el ```micro:bit``` sigue acumulando como antes en caso tal de que se usé y así esta limpieza de frames solo sucede dentro de strudel.
+
+```
+function drawRunning() {
+    const mb = painter.rxData;
+    const sv = painter.strudelVisual;
+
+    // ── Visual del micro:bit (sin cambios) ────────────────────────────────────
+    if (mb.ready && mb.btnA) {
+        push();
+        translate(width / 2, height / 2);
+        let angle = TAU / mb.circleResolution;
+        if (mb.btnB) {
+            fill(34, 45, 122, 50);
+        } else {
+            noFill();
+        }
+        beginShape();
+        for (let i = 0; i <= mb.circleResolution; i++) {
+            let x = cos(angle * i) * mb.radius;
+            let y = sin(angle * i) * mb.radius;
+            vertex(x, y);
+        }
+        endShape();
+        pop();
+    }
+
+    // ── NUEVO U6: visual de Strudel ───────────────────────────────────────────
+    if (!sv.active) return;
+
+    background(255); // ← solo limpia cuando hay un evento de Strudel activo
+    const name = sv.sound.toLowerCase();
+```
+
+
+Si lo coloco al inicio de ```drawRunning``` tendría un efecto secundario y limpiaría tambien los dibujos del micro:bit constantemente en caso de usarse. 
+
+```
+// sketch.js
+function drawRunning() {
+    background(255);  // ← limpia cada frame para que el flash dure exactamente delta ms
+    // ...
+}
+```
+
+Ya esto es más en función de diseño.
 
 
 
