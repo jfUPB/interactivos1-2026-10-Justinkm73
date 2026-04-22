@@ -195,7 +195,7 @@ Ya no tiene ```type```, ni ```eventType```, ni ```payload``` anidado. Solo los t
 ```
 // sketch.js
 function drawRunning() {
-    const sv = painter.strudelVisual;  // ← solo lee, no decide nada
+    const sv = painter.strudelVisual;  // <- solo lee, no decide nada
 
     if (!sv.active) return;
 
@@ -220,6 +220,71 @@ function drawRunning() {
 La cadena completa es:
 ```StrudelAdapter``` -> ```bridgeServer``` -> ```WebSocket``` -> ```bridgeClient```
 -> ```postEvent``` -> ```FSM``` -> ```strudelQueue``` -> ```checkStrudelQueue``` -> ```strudelVisual``` -> ```drawRunning```
+
+---
+
+**4. Cómo separaste recepción, cola temporal y renderizado**
+
+**Recepción**
+
+Ocurre en ```updateStrudelQueue()``` Su única responsabilidad es tomar el mensaje normalizado y meterlo en la cola con los datos mínimos necesarios. No decide cuándo se activa, no decide qué se dibuja.
+
+```
+updateStrudelQueue(msg) {
+    this.strudelQueue.push({
+        timestamp: msg.timestamp,   // cuándo activar
+        s:         msg.payload.s,   // qué sonido
+        delta:     msg.payload.delta // cuánto dura
+    });
+}
+```
+
+**Cola temporal**
+ocurre en checkStrudelQueue(), que se llama cada frame desde draw(). Compara el reloj local con el timestamp de cada evento.
+
+```
+checkStrudelQueue() {
+    const now = Date.now();
+
+    // Activar si ya llegó el momento
+    if (this.strudelQueue.length > 0 && this.strudelQueue[0].timestamp <= now) {
+        const ev = this.strudelQueue.shift();
+        this.strudelVisual.active      = true;
+        this.strudelVisual.sound       = ev.s;
+        this.strudelVisual.delta       = ev.delta;
+        this.strudelVisual.triggerTime = now;
+    }
+
+    // Desactivar si ya expiró la duración
+    if (this.strudelVisual.active) {
+        const elapsed  = now - this.strudelVisual.triggerTime;
+        const duration = this.strudelVisual.delta * 1000;  // segundos → ms
+        if (elapsed >= duration) {
+            this.strudelVisual.active = false;
+        }
+    }
+}
+```
+
+*NOTA:*
+Esta función no vive dentro de la FSM directamente porque necesita ejecutarse cada frame, independientemente de si llegó un evento nuevo. La FSM solo reacciona cuando hay eventos en su cola — ```checkStrudelQueue``` necesita correr siempre.
+
+**Renderizado**
+Ocurre en ```drawRunning()```, que solo lee ```strudelVisual```. No sabe nada de WebSockets, no sabe nada de timestamps, no sabe nada de Strudel. Solo pregunta: ¿```sv.active``` es verdadero? ¿Qué dice ```sv.sound```? Y dibuja en consecuencia.
+
+---
+
+**5. Qué pruebas hiciste para verificar la sincronización**
+
+La verificación puede ser de observar el comportamiento de la viusal en sincronia con el golpe del audio. Entre otras formas:
+
+Verificar que los mensajes llegan al servidor:
+Al correr ```node bridgeServer.js --device strudel --wsPort 8081``` con ```--verbose```, el adapter imprime en consola cada vez que Strudel se conecta y cada vez que llega un mensaje. Si ves los logs, el transporte funciona.
+
+
+
+
+
 
 
 
