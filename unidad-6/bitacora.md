@@ -436,6 +436,19 @@ function drawRunning() {
 
 Ya esto es más en función de diseño.
 
+*NOTA:*
+
+Scheduling
+Es la técnica de programar cuándo ocurre algo, no solo qué ocurre. En este sistema significa que cuando llega un evento de Strudel, no lo ejecutas inmediatamente — lo guardas en la cola y esperas a que el reloj local alcance el momento indicado. Es la separación entre recibir y ejecutar.
+
+nowMs()
+Es el tiempo actual del servidor en el momento en que el bridge recibe y reenvía un mensaje. Se usa en bridgeServer.js para los mensajes del micro:bit porque el micro:bit no envía su propio timestamp — alguien tiene que marcarlo. Se calcula con Date.now() en el servidor.
+
+timestamp
+Es el tiempo que Strudel calcula de antemano para indicar exactamente cuándo debe sonar un evento musical. Lo genera Strudel, no el servidor. Viaja dentro del mensaje y el frontend lo usa para decidir cuándo activar el visual.
+
+La diferencia clave
+nowMs() es el tiempo de llegada del mensaje — cuándo llegó al servidor. timestamp es el tiempo de ejecución del evento — cuándo debe ocurrir visualmente. En el micro:bit ambos coinciden porque no hay scheduling. En Strudel son distintos a propósito: el evento puede llegar antes de su timestamp, y el frontend espera en la cola hasta que Date.now() >= timestamp para activar el visual. Esa espera es el scheduling.
 
 
 
