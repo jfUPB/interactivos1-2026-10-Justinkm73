@@ -276,10 +276,32 @@ Ocurre en ```drawRunning()```, que solo lee ```strudelVisual```. No sabe nada de
 
 **5. Qué pruebas hiciste para verificar la sincronización**
 
-La verificación puede ser de observar el comportamiento de la viusal en sincronia con el golpe del audio. Entre otras formas:
+1. La verificación puede ser de observar el comportamiento de la viusal en sincronia con el golpe del audio.
 
-Verificar que los mensajes llegan al servidor:
-Al correr ```node bridgeServer.js --device strudel --wsPort 8081``` con ```--verbose```, el adapter imprime en consola cada vez que Strudel se conecta y cada vez que llega un mensaje. Si ves los logs, el transporte funciona.
+2. Console.log en ```checkStrudelQueue``` -> ```sketch.js``` Agrego está linea de código despues de ```const ev = this.strudelQueue.shift()``` tiene que ser despues de que se genera el evento:
+
+```
+console.log("[Strudel] activando:", ev.s, "timestamp:", ev.timestamp, "now:", now);
+```
+
+Ese es el momento exacto donde el sistema decide activar un evento visual. Si el log muestra ```ev.s``` con el nombre del sonido correcto y ```timestamp``` cercano a ```now```, confirmas que el ```scheduling``` funciona. La línea simplemente imprime esos tres datos en ese momento exacto.
+
+Para ver está información abrimos el navegador, le damos a los 3 puntos -> más herramientas -> herramientas del desarrollador -> console
+
+<img width="1295" height="924" alt="image" src="https://github.com/user-attachments/assets/62377359-7ee4-463b-b9ca-326b9c4e059b" />
+
+Miramos los números. La diferencia entre ```timestamp``` y ```now``` es de unos 16-17ms en cada evento — eso es exactamente un frame de p5.js a 60fps. Eso confirma tres cosas:
+
+El transporte funciona — los mensajes llegan del bridge al frontend
+La cola funciona — los eventos se están activando en orden
+La sincronización es buena — ```timestamp``` y ```now``` están muy cerca, no hay acumulación ni retraso
+
+Y mira el orden de los sonidos en la consola: hh → oh → bd → bd → sd → hh → oh → bd → bd → sd. Eso coincide exactamente con el patrón [bd*2 sd hh oh] de Strudel. El sistema está funcionando correctamente.
+
+
+
+
+
 
 
 
