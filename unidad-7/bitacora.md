@@ -93,6 +93,50 @@ En el frontend, los dos flujos se separan en ``` oscState```  y ``` strudelQueue
 
 ### ¿Qué problemas encontraste y cómo los solucionaste?
 
+**Problema 1 - Open Stage Control aparecía vacío** 
+Al abrir http://127.0.0.1:8086, la interfaz de Open Stage Control aparecía completamente vacía y no mostraba ningún widget.
+
+La causa del problema era que el archivo OSCUI.json no estaba cargado en la sesión actual de Open Stage Control.
+
+La solución consistió en cargar manualmente el archivo de sesión desde el menú de Open Stage Control, permitiendo recuperar correctamente toda la interfaz gráfica
+
+**Problema 2 - Los widgets no modificaban el visual**
+Aunque los widgets aparecían correctamente en pantalla, mover los controles no generaba ningún cambio en el visual.
+
+El problema ocurría porque el bridge de OSC no se encontraba corriendo correctamente.
+
+La solución fue levantar el segundo proceso correspondiente al bridge OSC y verificar, utilizando el modo --verbose, que los mensajes UDP estuvieran llegando correctamente al servidor. Una vez confirmada la recepción de mensajes, la comunicación entre Open Stage Control y el visual volvió a funcionar correctamente.
+
+**Problema 3 - Unificación de servidores en una sola terminal**
+Inicialmente, la aplicación funcionaba utilizando dos servidores ejecutándose en dos terminales diferentes. Esto generaba complejidad al momento de levantar el entorno y mantener la comunicación entre Strudel y OSC.
+
+Para solucionar este problema, se realizó una modificación en el Bridge Server, permitiendo que tanto Strudel como OSC funcionaran desde un único servidor WebSocket y en una sola terminal.
+
+El cambio principal consistió en modificar la función ```crearAdaptadores()```. Antes retornaba un único adaptador; ahora devuelve un arreglo de adaptadores dependiendo del modo seleccionado.
+
+```
+// Modo principal: Strudel + OSC en una sola terminal
+// Ambos adaptadores se amarran al mismo servidor WebSocket.
+// El cliente los distingue por msg.type ("strudel" vs "osc").
+// Solo necesitas un puerto WebSocket y una terminal.
+
+if (DEVICE === "strudel+osc") {
+  log.info("Creando adaptador Strudel (ws://127.0.0.1:8080)");
+  log.info(`Creando adaptador OSC     (UDP :${OSC_PORT})`);
+
+  const adaptadorStrudel = new StrudelAdapter({ verbose: VERBOSE });
+  const adaptadorOSC     = new OSCAdapter({ port: OSC_PORT, verbose: VERBOSE });
+
+  return [ adaptadorStrudel, adaptadorOSC ];
+}
+```
+
+**Con esta modificación:**
+
+1. Si el modo es "strudel", la lista contiene un solo adaptador.
+2. Si el modo es "strudel+osc", la lista contiene dos adaptadores.
+3. Ambos adaptadores se conectan al mismo servidor WebSocket y al mismo puerto.
+4. El cliente distingue el origen de los mensajes mediante msg.type.
 
 
 
