@@ -141,3 +141,41 @@ if (DEVICE === "strudel+osc") {
 
 
 ## Bitácora de reflexión
+
+<img width="600" height="694" alt="image" src="https://github.com/user-attachments/assets/a332e090-874c-4fb7-b4ce-9fc7987a869d" />
+
+<img width="1421" height="371" alt="image" src="https://github.com/user-attachments/assets/f40d5a3f-f6a2-44dc-9e1a-1b7efc11f556" />
+
+
+### ¿Por qué OSC no debe tratarse igual que Strude?
+
+La diferencia fundamental es la semántica temporal de cada fuente. Strudel produce eventos discretos con un timestamp que dice "activa este visual en exactamente este instante". El sistema necesita una cola ordenada cronológicamente, una función que la revise en cada frame y una lógica de expiración: el flash dura delta segundos y desaparece. El tiempo es el dato más importante del mensaje.
+OSC hace lo contrario. Un slider de Open Stage Control envía su valor actual cuando el usuario lo mueve, y ese valor no tiene fecha de vencimiento: simplemente describe cómo debe verse el sistema ahora y en adelante. Si el usuario mueve el slider de color a las 10:00 y no vuelve a tocarlo, a las 10:05 el círculo del bombo debe seguir con ese color. No hay nada que "expirar" ni ningún timestamp que comparar.
+Si se tratara OSC igual que Strudel, habría que encolar mensajes sin timestamp, y la cola nunca sabría cuándo despacharlos. O peor: si se les inventara un timestamp de "ahora", se despacharían en el siguiente frame y se descartarían, haciendo que cada movimiento del slider fuera ignorado hasta el siguiente evento de Strudel.
+La arquitectura lo refleja directamente: los mensajes Strudel van a strudelQueue[] y esperan su turno. Los mensajes OSC van directamente a oscState sobrescribiendo el valor anterior, sin cola, sin temporizador. drawRunning() lee oscState en cada frame igual que un valor de configuración, no como un evento puntual.
+
+### Justifica los tres controles que elegiste.
+
+**Control /rgb_1 — color del bombo**
+El bombo es el golpe más frecuente y visualmente dominante en un patrón de batería típico. Darle control de color permite que el operador en vivo diferencie secciones de la pieza (intro, clímax, coda) con un cambio de paleta sin interrumpir el flujo. En drawRunning() se refleja directamente en el fill(r, g, b) del ellipse() del bombo: cada vez que llega un /rgb_1, el color del círculo cambia de inmediato y permanece hasta el siguiente mensaje. El rango 0–255 por canal da control cromático completo.
+
+
+**Control /size — tamaño del bombo**
+El radio del círculo es el parámetro más legible perceptivamente: un círculo pequeño crea tensión, uno grande domina el canvas. Mapear /size (0–1) a un diámetro de 20–200 px con map(oc.size, 0, 1, 20, 200) hace que el slider sea intuitivo: el tamaño visual escala linealmente con el gesto físico. Permite crear dinámicas de intensidad creciente (crescendo visual) o reducir la presencia del bombo sin silenciarlo.
+
+**Control /posY — posición vertical del bombo**
+La altura en el canvas genera relaciones espaciales con los otros elementos visuales (la caja centrada, el hi-hat en el cuarto superior). Subir el bombo rompe el eje vertical esperado y crea tensión; bajarlo ancla el sonido en la parte inferior del frame. El mapeo map(oc.posY, 0, 1, 0, height) hace que 0 = tope y 1 = base del canvas, correspondiendo a la dirección del slider en Open Stage Control (origin: bottom). El operador puede "escribir" con el bombo en el espacio vertical de la pieza.
+
+**Integrar una tercera fuente de control**
+
+
+*Lo que se conservaría sin cambios:*
+
+```BaseAdapter.js``` establece el contrato que cualquier fuente nueva debe cumplir: ```connect()```, ```disconnect()```, ```onData```, ```onConnected```, ```onDisconnected.``` Es el único requisito para integrarse al sistema. La función ```amarrarAdaptador()``` en ```bridgeServer.js``` ya es genérica: recibe cualquier instancia de ```BaseAdapter``` y la conecta al servidor ```WS.``` ```BridgeClient.js``` ya enruta por ```msg.type```, y la ```FSM ``` con ```PainterTask``` ya distingue entre fuentes por el tipo de evento. No habría que tocar ninguno de estos componentes.
+
+
+*Lo que se extendería:*
+
+Se crearía un nuevo archivo ```NuevaFuenteAdapter.js``` que extiende ```BaseAdapter```. La única decisión es si el dato es discreto con ```timestamp``` (va a una cola, igual que Strudel), persistente sin ```timestamp``` (va a un estado similar a ```oscState```) o continuo en tiempo real (reemplaza el estado anterior, igual que ```micro:bit```). En ```bridgeServer.js``` se agregaría el adapter al array de ```crearAdaptadores()``` para el ```--device``` correspondiente. En ```sketch.js``` se añadiría una entrada en el switch de ```onData()``` para enrutar el nuevo ```msg.type```, y si es persistente, un nuevo objeto de estado análogo a ```oscState```. La función ```drawRunning()``` recibiría una referencia a ese estado y lo usaría en el render.
+La arquitectura en capas (adaptador → servidor → cliente → FSM → render) hace que cada decisión esté localizada: agregar una fuente nueva no exige modificar las capas que ya funcionan.
+
