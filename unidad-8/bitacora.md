@@ -195,5 +195,24 @@ se agregó control desde la interfaz OSC para seleccionar fotografías específi
 ---
 
 
+### EVIDENCIAS DE ENSAYO
+
+<img width="1319" height="712" alt="image" src="https://github.com/user-attachments/assets/96bbf274-8649-46ec-998d-9155d55e5430" />
+
+--
+
+<img width="1334" height="705" alt="image" src="https://github.com/user-attachments/assets/87b3c07c-d9ac-43b4-b323-e95400ba82ea" />
+
+--
+
+<img width="1334" height="708" alt="image" src="https://github.com/user-attachments/assets/bb0cfc14-8417-4178-b0e9-ad8450fce107" />
+
+--
+
+<img width="1333" height="711" alt="image" src="https://github.com/user-attachments/assets/4eef0599-c1d8-498d-87c1-67289155e5f0" />
+
+
+---
+
 
 ## Bitácora de reflexión
