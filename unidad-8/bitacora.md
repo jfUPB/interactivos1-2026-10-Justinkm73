@@ -8,6 +8,7 @@
 ### Actividad #2 ITERACIÓN ESTETICA
 
 #### CONCEPTO DE LA OBRA
+--
 
 *La Iglesia* es una performance de live coding audiovisual que usa la arquitectura visual y simbólica de una iglesia católica como materia prima para explorar tres estados de intensidad emocional: el orden representado (la nave, el vitral, la geometría sagrada), el cuerpo que sufre dentro de ese orden (los rostros, el llanto, el afán), y la violencia que lo funda (la crucifixión, la sangre, los clavos).
 
@@ -48,6 +49,7 @@ Fotografías reales pixeladas como LEDs. La imagen documental degradada. El perf
 
 
 #### ROL DEL MICRO:BIT, STRUDEL & OPEN STAGE CONTROl
+--
 
 **Micro:bit**
 
@@ -107,6 +109,7 @@ La cruz audio-reactiva sobre las fotografías requiere simultáneamente: que mic
 
 
 #### DESICIONES VISUALES, MUSICALES, PERFORMÁTICAS
+--
 
 **Desiciones visuales**
 
@@ -151,30 +154,37 @@ Open Stage Control se opera en paralelo, ajustando el estado del espacio: el col
 
 
 #### CAMBIOS REALIZADOS ENTRE LA ITERACIÓN INGENIERIL Y LA ITERACIÓN ESTÉTICA
+--
 
 **Orbit como distinguidor de bass1/bass2:**
 
 en la iteración ingenieril, ambos canales "saw" llegaban a la misma zona. Se agregó el campo orbit al payload normalizado del StrudelAdapter para que el frontend pueda bifurcarlos hacia inner (mandala) y cells (partículas), dando a cada línea de bajo una expresión visual distinta.
 
+--
 
 **Cruz como overlay en M2:**
 
 la cruz no existía sobre las fotografías en la iteración técnica. Se agregó como elemento audio-reactivo que aparece solo cuando OSC lo habilita (/cruz_1), creando la convergencia de las tres fuentes descrita arriba.
 
+--
 
 **Paleta cromática definida como intención:**
 
 El color por defecto del vitral ([195, 162, 118]) fue elegido como punto de partida cálido-sepia. En la iteración ingenieril era un placeholder; ahora es una decisión estética fundamentada en el referente material de los vitrales.
 
+--
 
 **Arco performático de 3 momentos:**
 
 La iteración ingenieril verificaba que las fuentes llegaban al sistema. La iteración estética define qué hace el performer con ellas y en qué orden, transformando una demo técnica en una partitura de acciones.
 
+--
 
 **ProcessQueue siempre activo independiente del momento visual:**
 
 se modificó drawRunning para que Strudel y tickZones se ejecuten incluso en M2, de modo que la cruz sea audio-reactiva con bd aunque las fotografías sean el visual principal.
+
+--
 
 **Selección directa de foto por OSC (/photo_N):**
 
