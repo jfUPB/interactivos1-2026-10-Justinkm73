@@ -5,9 +5,9 @@
 
 ## Bitácora de aplicación 
 
-### Actividad #2 ITERACIÓN ESTETICA
+### ITERACIÓN ESTETICA // Actividad #2
 
-#### CONCEPTO DE LA OBRA
+### CONCEPTO DE LA OBRA
 --
 
 *La Iglesia* es una performance de live coding audiovisual que usa la arquitectura visual y simbólica de una iglesia católica como materia prima para explorar tres estados de intensidad emocional: el orden representado (la nave, el vitral, la geometría sagrada), el cuerpo que sufre dentro de ese orden (los rostros, el llanto, el afán), y la violencia que lo funda (la crucifixión, la sangre, los clavos).
@@ -48,7 +48,7 @@ Fotografías reales pixeladas como LEDs. La imagen documental degradada. El perf
 ---
 
 
-#### ROL DEL MICRO:BIT, STRUDEL & OPEN STAGE CONTROl
+### ROL DEL MICRO:BIT, STRUDEL & OPEN STAGE CONTROl
 --
 
 **Micro:bit**
@@ -108,7 +108,7 @@ La cruz audio-reactiva sobre las fotografías requiere simultáneamente: que mic
 
 
 
-#### DESICIONES VISUALES, MUSICALES, PERFORMÁTICAS
+### DESICIONES VISUALES, MUSICALES, PERFORMÁTICAS
 --
 
 **Desiciones visuales**
@@ -153,7 +153,7 @@ Open Stage Control se opera en paralelo, ajustando el estado del espacio: el col
 
 
 
-#### CAMBIOS REALIZADOS ENTRE LA ITERACIÓN INGENIERIL Y LA ITERACIÓN ESTÉTICA
+### CAMBIOS REALIZADOS ENTRE LA ITERACIÓN INGENIERIL Y LA ITERACIÓN ESTÉTICA
 --
 
 **Orbit como distinguidor de bass1/bass2:**
