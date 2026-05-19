@@ -13,7 +13,7 @@
 
 El referente sonoro es el dark ambient industrial: instrumental oscuro, textura de ruido blanco que se densifica hacia el clímax. La performance no ilustra ni explica la iglesia —la procesa, la desfigura y la reconstruye en tiempo real.
 
-
+--
 
 **El sistema tiene dos estados visuales que el performer navega durante la ejecución:**
 
@@ -26,19 +26,19 @@ Vitral gótico generativo. La arquitectura como símbolo: mandala, arcos, cruz d
 
 Fotografías reales pixeladas como LEDs. La imagen documental degradada. El performer navega las fotos con el cuerpo, ajusta la escala con OSC. La cruz puede aparecer sobre las fotos como overlay audio-reactivo.
 
-
+--
 
 **La obra tiene tres capas de significado que corresponden a los tres niveles anotados en el boceto conceptual:**
 
-a. Plano detalle, Acciones. La iglesia como institución simbólica: la geometría del vitral, el orden de los ritos, la arquitectura del poder.
+**a.** Plano detalle, Acciones. La iglesia como institución simbólica: la geometría del vitral, el orden de los ritos, la arquitectura del poder.
 
 
-b. Dolor, llanto, Rostros enojo. Los cuerpos dentro de esa institución: las fotografías de personas, de planos cerrados, de gestos. La experiencia humana atrapada en el símbolo.
+**b.** Dolor, llanto, Rostros enojo. Los cuerpos dentro de esa institución: las fotografías de personas, de planos cerrados, de gestos. La experiencia humana atrapada en el símbolo.
 
 
-c. Sangre, clavos, Cruzada. La violencia fundante.
+**c.** Sangre, clavos, Cruzada. La violencia fundante.
 
-
+--
 
 <img width="1600" height="1011" alt="image" src="https://github.com/user-attachments/assets/0265240f-8142-4d60-89e1-51296cb59b41" />
 
@@ -53,7 +53,7 @@ c. Sangre, clavos, Cruzada. La violencia fundante.
 
 Es la única fuente que puede cambiar el estado visual del sistema. Botón B alterna entre los dos momentos. Botón A cicla fotografías en M2. El acelerómetro controla zoom y scatter de píxeles. Sin micro:bit, la obra no tiene dirección ni navegación.
 
-
+--
 
 **Strudel**
 
@@ -73,7 +73,7 @@ Cada instrumento del patrón activa una zona visual distinta. Define cuáles par
 
 **sd**  ->  Nervios del abanico
 
-
+--
 
 **Open Stage Control**
 
@@ -94,7 +94,7 @@ OSC no activa eventos: sostiene el estado. El color de la luz, la escala del vit
 
 **/photo_N**  ->  **foto activa**  ->  Selección directa de fotografía desde la interfaz OSC
 
-
+--
 
 **Combinación de las 3 Fuentes**
 
@@ -116,23 +116,73 @@ La pixelación LED de las fotografías en M2 es una decisión deliberada de degr
 
 El blur de persistencia de frames (/trail_1) en M1 crea rastro luminoso: el vitral no se borra entre frames sino que se acumula. A mayor waveSize, mayor probabilidad de desborde visual. Esa inestabilidad es intencional —el sistema puede volverse ilegible si el performer lo decide.
 
+--
 
 **Decisiones musicales**
 
 La decisión de usar 180 bpm como base de referencia para la escritura en Strudel define una tensión constante. El dark ambient no es lento ni contemplativo: tiene urgencia. Los patrones están diseñados para activar zonas visuales de forma diferenciada —el bd no activa lo mismo que el metal, aunque ambos sean golpes percusivos. Esa diferenciación es la que hace que el visual sea polifónico y no una masa que parpadea uniforme.
 
+
 **Tenemos tres momentos que coinciden con las capas conceptuales:**
 
-**- Momento 1:**
+**- Momento 1: (INTRO)**
 Patrones dispersos, vitral en reposo, la geometría sagrada aparece lentamente.
 
-**- Momento 2:**
+**- Momento 2: (GROOVE)**
 Los patrones se acumulan, el performer transita a M2, las fotos aparecen.
 
-**- Momento 3:**
+**- Momento 3: (CLIMAX)**
 Ruido → Sonido. Todos los canales activos, la cruz sobre las fotos, el blur al máximo.
 
+--
 
+**Decisiones performáticas**
+
+El micro:bit es visible durante la performance: el gesto de cambiar de momento es deliberadamente físico. El performer no oculta que está manipulando el sistema —lo contrario: el movimiento del cuerpo y el cambio visual son simultáneos y causales.
+
+Strudel se toca en vivo: el live coding es parte de la performance. El performer puede alterar los patrones durante la ejecución, agregar o quitar instrumentos, cambiar densidades. El código es partitura abierta, no preset fijo.
+
+Open Stage Control se opera en paralelo, ajustando el estado del espacio: el color de la luz, la escala del vitral, la aparición de la cruz. Son decisiones de dirección artística tomadas en tiempo real.
+
+
+
+---
+
+
+
+#### CAMBIOS REALIZADOS ENTRE LA ITERACIÓN INGENIERIL Y LA ITERACIÓN ESTÉTICA
+
+**Orbit como distinguidor de bass1/bass2:**
+
+en la iteración ingenieril, ambos canales "saw" llegaban a la misma zona. Se agregó el campo orbit al payload normalizado del StrudelAdapter para que el frontend pueda bifurcarlos hacia inner (mandala) y cells (partículas), dando a cada línea de bajo una expresión visual distinta.
+
+
+**Cruz como overlay en M2:**
+
+la cruz no existía sobre las fotografías en la iteración técnica. Se agregó como elemento audio-reactivo que aparece solo cuando OSC lo habilita (/cruz_1), creando la convergencia de las tres fuentes descrita arriba.
+
+
+**Paleta cromática definida como intención:**
+
+El color por defecto del vitral ([195, 162, 118]) fue elegido como punto de partida cálido-sepia. En la iteración ingenieril era un placeholder; ahora es una decisión estética fundamentada en el referente material de los vitrales.
+
+
+**Arco performático de 3 momentos:**
+
+La iteración ingenieril verificaba que las fuentes llegaban al sistema. La iteración estética define qué hace el performer con ellas y en qué orden, transformando una demo técnica en una partitura de acciones.
+
+
+**ProcessQueue siempre activo independiente del momento visual:**
+
+se modificó drawRunning para que Strudel y tickZones se ejecuten incluso en M2, de modo que la cruz sea audio-reactiva con bd aunque las fotografías sean el visual principal.
+
+**Selección directa de foto por OSC (/photo_N):**
+
+se agregó control desde la interfaz OSC para seleccionar fotografías específicas sin depender solo del botón A del micro:bit, dando al performer más opciones de composición visual durante la ejecución.
+
+
+
+---
 
 
 
