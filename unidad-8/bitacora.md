@@ -197,22 +197,12 @@ se agregó control desde la interfaz OSC para seleccionar fotografías específi
 
 ### EVIDENCIAS DE ENSAYO
 
-<img width="1319" height="712" alt="image" src="https://github.com/user-attachments/assets/96bbf274-8649-46ec-998d-9155d55e5430" />
+<img width="1022" height="580" alt="image" src="https://github.com/user-attachments/assets/3c4304d1-3957-4601-af3b-6d007c32cf16" />
 
---
-
-<img width="1334" height="705" alt="image" src="https://github.com/user-attachments/assets/87b3c07c-d9ac-43b4-b323-e95400ba82ea" />
-
---
-
-<img width="1334" height="708" alt="image" src="https://github.com/user-attachments/assets/bb0cfc14-8417-4178-b0e9-ad8450fce107" />
-
---
-
-<img width="1333" height="711" alt="image" src="https://github.com/user-attachments/assets/4eef0599-c1d8-498d-87c1-67289155e5f0" />
 
 
 ---
+
 
 
 ### REVISIÓN TÉCNICA, BITÁCORA Y SUSTENTACIÓN // Actividad #3
@@ -285,6 +275,17 @@ El sonido articula y guía este tránsito en tres momentos: intro, groove y clí
 
 
 ### Evidencias de pruebas y ensayos
+
+<img width="2060" height="1135" alt="01" src="https://github.com/user-attachments/assets/bf3a7e7a-2a35-46a5-bccc-9fdbc5575c4f" />
+
+--
+
+<img width="2060" height="1135" alt="02" src="https://github.com/user-attachments/assets/9de789f6-9bd6-4bb7-9cfa-a3952d5866d1" />
+
+--
+
+<img width="2060" height="1135" alt="03" src="https://github.com/user-attachments/assets/a8e06d1e-e2ee-42bd-89d7-94a9f2e8d2a8" />
+
 
 
 ## Bitácora de reflexión
