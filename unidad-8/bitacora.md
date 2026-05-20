@@ -215,4 +215,76 @@ se agregó control desde la interfaz OSC para seleccionar fotografías específi
 ---
 
 
+### REVISIÓN TÉCNICA, BITÁCORA Y SUSTENTACIÓN // Actividad #3
+
+### Diagrama de flujo de datos del sistema
+<img width="912" height="1095" alt="Diagrama" src="https://github.com/user-attachments/assets/ee5541ad-8bcc-44a4-b24b-7a714c93a7e0" />
+
+
+
+---
+
+
+
+### Tabla de roles
+<img width="1030" height="529" alt="image" src="https://github.com/user-attachments/assets/a6c240a8-442d-431a-8be6-69d1f724f370" />
+
+
+
+---
+
+
+### Recorrido: Adapter -> bridgeServer -> bridgeClient -> FSMTask -> updateLogic -> drawRunning
+
+--
+
+**Adapter** — Cada adaptador tiene una sola responsabilidad: hablar el idioma de su fuente y entregar un objeto normalizado. MicrobitBinaryAdapter habla serial binario. StrudelAdapter habla WS + JSON. OSCAdapter habla UDP + OSC. Todos entregan datos a bridgeServer llamando this.onData(normalizado).
+
+--
+
+**bridgeServer** — Recibe de cualquier adaptador y hace broadcast a todos los clientes WebSocket conectados en el puerto 8081. Formatea el mensaje con formatBroadcast() si el adaptador lo define, o usa el formato microbit por defecto. No toma decisiones visuales — solo reenvía.
+
+--
+
+**bridgeClient** — Corre en el navegador. Recibe el mensaje JSON del WS y lo enruta según msg.type: "microbit" → callback onData, "strudel" → onData, "osc" → onData. El sketch registra ese callback con bridge.onData(msg => ...).
+
+--
+
+**FSMTask** — El sketch convierte cada mensaje en un evento tipado y lo postea a la FSM (MICROBIT_DATA, STRUDEL_EVENT, OSC_CONTROL). La FSM tiene dos estados: estado_esperando (ignora datos, muestra animación idle) y estado_corriendo (procesa todo). En estado_corriendo, cada tipo de evento llama al método correcto.
+
+--
+
+**updateLogic** — Tres caminos paralelos, cada uno actualiza una parte del estado:
+
+```_updateMicrobit``` → modifica activeVisual (btnB) o llama a ledVisual.handleMicrobit (btnA, acelerómetro)
+
+```processQueue``` → consume la cola de eventos Strudel ordenada por timestamp y llama a pulseZone("nucleus"), pulseZone("tracery"), etc.
+
+```_updateControl``` → actualiza controlState.glassColor, waveSize, blurEnabled con los valores OSC
+
+--
+
+**drawRunning** — Cada frame, p5.js llama draw(). Si la FSM está en estado_corriendo, se llama drawRunning(), que lee activeVisual, controlState y Z[zona].beat (que ya fueron actualizados por los tres caminos anteriores) y produce el visual. No recibe datos directamente — solo consume estado.
+
+
+
+---
+
+
+
+### Justificación de la propuesta estética y performática
+
+El recorrido busca habitar un espacio atmosférico construido en torno a la iglesia, contrastando su definición y mirada desde lo liminal, lo profundo, la perfección buscada en sus espacios y el sacrificio que conlleva alcanzarla. El vitral abre el camino —inicio, perfección geométrica, anhelo de lo divino—; las fotografías, en cambio, invitan a leer el desgaste, el sacrificio, el dolor y la sangre. Una tensión sostenida entre la forma idealizada y la materia que la sostiene.
+
+El sonido articula y guía este tránsito en tres momentos: intro, groove y clímax.
+
+
+
+---
+
+
+
+### Evidencias de pruebas y ensayos
+
+
 ## Bitácora de reflexión
